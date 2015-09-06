@@ -1,0 +1,30 @@
+﻿@{
+    Layout = "_SiteLayout.cshtml";
+    Page.tile = "Login";
+
+    var email = "";
+    var password  = "";
+    var errorMessage = "";
+
+    if(IsPost){
+        WebSecurity.Logout();
+        email = Request["email"];
+        password = Request["password"];
+        if(WebSecurity.Login(email, password, true)){
+            Response.Redirect("~/Home");
+        }
+        else{
+            errorMessage = "Invalid email or password";
+        }
+        
+    }
+
+
+}
+<h1>Login</h1>
+<form method="post">
+    <label>Email: </label> <input type="text" name="email"> <br>
+    <label>Password: </label><input type="password" name="password"> <br>
+    <input type="submit" value="Submit">
+</form>
+<a href=@Href("~/")>Home</a>

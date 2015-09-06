@@ -1,0 +1,18 @@
+﻿@{
+    Layout ="_SiteLayout.cshtml";
+    Page.title = "Home";
+}
+
+<h1>Home Page</h1>
+ @{
+   if(WebSecurity.IsAuthenticated){
+    <p>Welcome, @WebSecurity.CurrentUserName</p>
+    <p><a href=@Href("~/Logout")>Logout</a></p>
+    }
+    else{
+        <p><a href=@Href("~/Login")>Login</a></p>
+        <p><a href=@Href("~/Register")>Register</a></p>
+    }
+    <p><a href=@Href("~/Members/Members")>Member Content</a></p>
+    <p><a href=@Href("~/Admin/ManagePermissions")>Manage Permissions</a></p>
+}

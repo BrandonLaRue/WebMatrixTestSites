@@ -1,0 +1,19 @@
+﻿@{
+    var resultText = "";
+    if(IsPost){
+        var text = Request["textBox"] + Environment.NewLine;
+
+        var filePath = Server.MapPath("~/App_Data/note.txt");
+        File.WriteAllText(filePath,text);
+    }
+}
+
+@if(resultText != ""){
+    <h3>@resultText</h3>
+}else{
+    <h3>cat</h3>
+}
+<form method="post">
+    <label>Note: </label><input type="text" name="textBox">
+    <input type="submit" name="submitButton" value="Submit">
+</form>

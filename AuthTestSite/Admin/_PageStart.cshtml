@@ -1,0 +1,11 @@
+﻿@{
+    //If user is logged in and is an admin, allow access
+    if(WebSecurity.IsAuthenticated && Roles.IsUserInRole("Admin")){
+        
+    }
+    else{   //Otherwise Redirect them home
+        Response.Redirect("~/Home");
+    }
+    
+}
+

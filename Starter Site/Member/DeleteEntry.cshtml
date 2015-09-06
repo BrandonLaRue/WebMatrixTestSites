@@ -1,0 +1,34 @@
+﻿@{
+    Layout="~/_SiteLayout.cshtml";
+    Page.title="Delete Entry";
+
+    Validation.Validate("delete", "You did not select an option.");
+
+    var id = UrlData[0];
+    if(id.IsEmpty()){
+        Response.Redirect(@Href("~/ViewDatabase"));
+    }
+
+    var db = Database.Open("StarterSite");
+    var query = "";
+
+    if(IsPost && Validation.IsValid()){
+        query = "DELETE FROM userProfile WHERE UserId=@0";
+        db.Execute(query, id);
+        Response.Redirect(@Href("~/member/ViewDatabase"));
+    }
+
+    query = "SELECT * FROM UserProfile WHERE UserId=@0";
+    var row = db.QuerySingle(query, id);
+}
+
+<h1>Delete User</h1>
+<form method="post">
+    <b>Are you sure you want to delete this profile: </b><br>
+    <br>
+    <b>User Id: </b>@row.UserId <br>
+    <b>Email: </b>@row.Email
+    <br>
+    <input type="submit" value="Yes">
+    <button><a href=@Href("~/Member/EditEntry", @row.UserId) style="color: #000">No</a></button>
+</form>

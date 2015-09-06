@@ -1,0 +1,105 @@
+﻿@{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.title = "Manage Roles";
+
+    var db = Database.Open("StarterSite");
+    var userSelectQuery = "SELECT UserId, Username FROM UserProfile3";
+
+    if(IsPost){
+
+        var role = "";
+        var user = "";
+        var errorText = "";
+
+        //If Add Role clicked
+        if(!Request["addRole"].IsEmpty()){
+            if(!Request["manageRole"].IsEmpty()){
+                role = Request["manageRole"];
+                if(!Roles.RoleExists(role)){
+                    Roles.CreateRole(role);
+                }
+                else{
+                    errorText = "Role Already Exists";
+                }
+            }
+        }
+
+        //If Delete Role clicked
+        if(!Request["deleteRole"].IsEmpty()){
+            if(!Request["manageRole"].IsEmpty()){
+                role = Request["manageRole"];
+
+                 if(Roles.RoleExists(role)){
+                    Roles.DeleteRole(role);
+                }
+                else{
+                    errorText = "Role Doesn't Exist";
+                }
+            }
+        }
+
+
+        //If Add User to Role clicked
+        if(!Request["addUserToRole"].IsEmpty()){
+            if(!Request["user"].IsEmpty() && !Request["role"].IsEmpty()){
+                role = Request["role"];
+                user = Request["user"];
+
+                if(!Roles.IsUserInRole(user, role)){
+                    Roles.AddUserToRole(user, role);
+                }
+                else{
+                    errorText = user + " has already been assigned the role " + role + ".";
+                }
+            }
+        }
+
+        //If Delete User from Role clicked
+        if(!Request["deleteUserFromRole"].IsEmpty()){
+            if(!Request["user"].IsEmpty() && !Request["role"].IsEmpty()){
+                role = Request["role"];
+                user = Request["user"];
+
+                if(Roles.IsUserInRole(user, role)){
+                    Roles.RemoveUserFromRole(user, role);
+                }
+                else{
+                    errorText = user + " does not have the role " + role + ".";
+                }
+            }
+        }
+    }
+}
+<form method="post" class="form-inline">
+    <div class="form-group col-md-8 col-md-offset-2">
+        <label>Role: </label><input type="text" name="manageRole" class="form-control" placeholder="Role">
+        <input type="submit" value="Add Role" name="addRole" class="form-control btn btn-primary">
+        <input type="submit" value="Delete Role" name="deleteRole" class="form-control btn btn-primary">
+    </div>
+
+    
+
+    <div class="form-group col-md-8 col-md-offset-2">
+        <label>User: </label>
+        <select name="user" class="form-control">
+            @foreach(var row in db.Query(userSelectQuery)){
+                <option>@row.username</option>
+            }
+        </select>
+
+        <label>Role: </label>
+        <select name="role" class="form-control">
+            @foreach(var r in Roles.GetAllRoles()){
+                <option>@r</option>
+            }
+        </select>
+
+        <input type="submit" value="Add User to Role" name="addUserToRole" class="form-control btn btn-primary">
+        <input type="submit" value="Delete User from Role" name="deleteUserFromRole" class="form-control btn btn-primary">
+    </div>
+    <input type="submit" value="Submit">
+    <h3>@Request["user"]</h3>
+
+    
+
+</form>

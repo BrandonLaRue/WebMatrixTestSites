@@ -1,0 +1,34 @@
+﻿@{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.title = "Log In";
+
+    var errorText = "";
+
+    if(IsPost){
+        WebSecurity.Logout();
+        Validation.RequireField("username", "You must enter a username.");
+        Validation.RequireField("password", "You must enter a password.");
+
+        var username = Request["username"];
+        var password = Request["password"];
+        
+
+        if(Validation.IsValid()){
+           if(!username.IsEmpty() && !password.IsEmpty()){
+               if(WebSecurity.Login(username, password, true)){
+                   Response.Redirect("~/");
+               }
+               else{
+                   errorText = "Invalid username / password combination.";
+               }
+           }
+        }
+    }
+}
+
+<form method="post">
+    <h3>@errorText</h3>
+    <label>Username: </label><input type="text" name="username" class="form-control"><br>
+    <label>Password: </label><input type="password" name="password" class="form-control"><br>
+    <input type="submit" value="Log In" class="btn btn-primary">
+</form>

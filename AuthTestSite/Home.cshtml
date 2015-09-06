@@ -1,0 +1,31 @@
+﻿@{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.title = "Home";
+}
+
+@{
+    if(WebSecurity.IsAuthenticated){
+        <h3>User: @WebSecurity.CurrentUserName</h3> //Problem here when an account was deleted while logged in, 
+    }                                               //Couldn't reach homepage ^
+    else{
+        <h3>You are not logged in.</h3>
+    }
+}
+<a href=@Href("~/Register")>Register</a>
+
+
+@{
+    if(WebSecurity.IsAuthenticated){
+        <a href=@Href("~/Logout")>Logout</a>
+        <a href=@Href("~/Members/MemberPage")>Member Page</a>
+    }
+    else{
+        <a href=@Href("~/Login")>Login</a>
+    }
+}
+
+@if(Roles.IsUserInRole("Admin")){
+    <br>
+    <a href=@Href("~/Admin/ManageRoles")>Manage Roles</a>
+}
+

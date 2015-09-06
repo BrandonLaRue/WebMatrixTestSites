@@ -1,0 +1,55 @@
+﻿@{
+    Page.title="User Registration";
+    Layout="~/_SiteLayout.cshtml";
+
+    var username = "";
+    var password = "";
+    var passwordConf = "";
+    var errorMessage = "";
+
+
+    if(!IsPost){
+        if(WebSecurity.IsAuthenticated){
+            errorMessage = String.Format("You are already logged in as @0.", WebSecurity.CurrentUserName);
+            
+        }
+    }
+    
+    if(IsPost){
+        WebSecurity.Logout();
+        username = Request["username"];
+        password = Request["Password"];
+        passwordConf = Request["passwordConf"];
+
+        if(password != passwordConf){
+            errorMessage = "Your password did not match.";
+        }
+        else{
+            if(WebSecurity.UserExists(username)){
+                errorMessage = "This user already exists.";
+            }
+            else{
+                WebSecurity.CreateUserAndAccount(username, password, null, true);
+                //WebSecurity.Login(username, password, true);
+                Response.Redirect("~/Home");
+                errorMessage = String.Format("@0 Created", username);
+            }
+        }
+    }
+}
+
+<h2>Register</h2>
+<form method="post">
+    <p>
+        @if(errorMessage != ""){
+            <span class="errorMessage">@Html.Raw(errorMessage)</span>
+        }
+   </p>
+
+    Username: <input type="text" name="username"><br>
+    Password: <input type="password" name="password"><br>
+    Password Confirmation: <input type="password" name="passwordConf"><br>
+    <input type="submit" value="Submit">
+</form>
+
+<a href=@Href("~/Home")>Return Home</a>

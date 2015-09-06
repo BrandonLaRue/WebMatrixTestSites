@@ -1,0 +1,66 @@
+﻿    @{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.title = "Register";
+
+    if(IsPost){
+        var username = "";
+        var email = "";
+        var password = "";
+        var passwordConf = "";
+        
+        Validation.RequireField("username", "You must enter a username");
+        Validation.RequireField("email", "You must enter a valid email address");
+        Validation.RequireField("password", "You must enter a password");
+        Validation.RequireField("passwordConf", "You must confirm your password");
+        Validation.Add("email",Validator.Regex("[^@\\s\\.][^@\\s]*@[^@\\s]+\\.[^@\\s]+[^.@]", "Please enter a valid email address"));
+        Validation.Add("passwordConf", Validator.EqualsTo("password", "Your password and confirmation don't match"));
+        
+        if(Validation.IsValid()){
+            username = Request["username"];
+            email = Request["email"];
+            password = Request["password"];
+            var data = new Dictionary<string, string>();
+            data.Add("email", email);
+            if(!WebSecurity.UserExists(username)){
+                WebSecurity.CreateUserAndAccount(username, password, false);
+                WebSecurity.Login(username,password, true);
+
+                //add Email to email table
+                var query = "INSERT INTO Email (UserId, Email, Preferred) VALUES (@0, @1 ,@2)";
+                var db = Database.Open("StarterSite");
+                db.Execute(query, WebSecurity.CurrentUserId.ToString(),email, "true");
+
+                //Redirect home
+                Response.Redirect("~/");
+            }
+            
+        }
+    }
+}
+
+
+<div class="row">
+    <div class="col-md-8 col-md-offset-2">
+        <h1>Resigter</h1>
+        @Html.ValidationMessage("username") <br>
+        @Html.ValidationMessage("email") <br>
+        @Html.ValidationMessage("password") <br>
+        @Html.ValidationMessage("passwordConf") <br>
+      
+        <form method="post" class="">
+            <div class="form-group">
+                <label style="margin-left: 12px">Username: </label><input type="text" name="username" class="form-control" placeholder="Username"><br>
+            </div>
+            <div class="form-group">
+                <label style="margin-left: 12px">Email: </label><input type="email" name="email" class="form-control" placeholder="Email"><br>
+            </div>
+            <div class="form-group">
+                <label style="margin-left: 12px">Password: </label><input type="password" name="password" class="form-control" placeholder="Password"><br>
+            </div>
+            <div class="form-group">
+                <label style="margin-left: 12px">Confirm Password: </label><input type="password" name="passwordConf" class="form-control" placeholder="Confirm Password"><br>
+            </div>
+            <input type="submit" value="Register" class="btn btn-primary">
+        </form>
+    </div>
+</div>

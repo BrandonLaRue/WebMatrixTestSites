@@ -1,0 +1,85 @@
+﻿@{
+    var db = Database.Open("AuthTestSite");
+    var userSelectQuery = "SELECT UserId, Email FROM UserProfile";
+
+    if(IsPost){
+        var email = "";
+        var role = "";
+
+        //If Add Role clicked and there is valid input
+        if(!Request["addRole"].IsEmpty() && !Request["roleEdit"].IsEmpty()){
+            role = Request["roleEdit"];
+
+            //If the doesn't exist, create it
+            if(!Roles.RoleExists(role)){
+                Roles.CreateRole(role);
+            }
+        }
+
+        //If Delete Role clicked and there is valid input
+        if(!Request["deleteRole"].IsEmpty() && !Request["roleEdit"].IsEmpty()){
+            role = Request["roleEdit"];
+            //If the role exists, delete it
+            if(Roles.RoleExists(role)){
+                Roles.DeleteRole(role, true);   //If there are users that have that role, the role will not be deleted
+            }
+        }
+
+        //If Add Role to Userclicked and there is valid input
+        if(!Request["userRoleAdd"].IsEmpty() && !Request["emailSelect"].IsEmpty() && !Request["roleSelect"].IsEmpty()){
+            role = Request["roleSelect"];
+            email = Request["emailSelect"];
+
+            //If user doesn't already have that role, add it
+            if(!Roles.IsUserInRole(email, role)){
+                Roles.AddUserToRole(email, role);
+            }
+        }
+
+        //If Delete Role from User clicked and there is valid input
+        if(!Request["userRoleDelete"].IsEmpty() && !Request["emailSelect"].IsEmpty() && !Request["roleSelect"].IsEmpty()){
+            role = Request["roleSelect"];
+            email = Request["emailSelect"];
+
+            //If user already has the role, delete it
+            if(Roles.IsUserInRole(email, role)){
+                Roles.RemoveUserFromRole(email, role);
+            }
+        }
+    }
+}
+<h1>Manage Roles</h1>
+<form method="post">
+    <label>Role: </label><input type="text" name="roleEdit">
+    <input type="submit" value="Add Role" name="addRole">
+    <input type="submit" value="Delete Role" name="deleteRole">
+    <br>
+    
+    <label>User: </label>
+    <select name="emailSelect">
+        @foreach(var row in db.Query(userSelectQuery)){
+            <option>@row.Email</option>
+        }
+    </select>    
+    <label>Role: </label>
+    <select name="roleSelect">
+        @foreach(var r in Roles.GetAllRoles()){
+            <option>@r</option>
+        }
+    </select>
+    <input type="submit" value="Add Role to User" name="userRoleAdd">
+    <input type="submit" value="Delete Role From User" name="userRoleDelete">
+</form>
+
+<ul>
+        @foreach(var r in Roles.GetAllRoles()){
+            <li>@r</li>
+            <ul>
+                @foreach(var u in Roles.GetUsersInRole(r)){
+                    <li>@u</li>
+                }    
+            </ul>
+        }
+</ul>
+
+<a href=@Href("~/Home")>Home</a>

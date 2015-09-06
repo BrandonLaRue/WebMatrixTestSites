@@ -1,0 +1,35 @@
+﻿@{
+    Layout="~/_SiteLayout.cshtml";
+    Page.title="Edit Entry";
+
+    Validation.RequireField("Email", "You need to enter an email address.");
+
+    var email = "";
+    var id = UrlData[0];
+    if(id.IsEmpty()){
+        Response.Redirect("~/Member/ViewDatabase");
+    }
+
+    var db = Database.Open("StarterSite");
+
+    if(IsPost && Validation.IsValid()){
+        var query = "UPDATE UserProfile SET Email=@0 WHERE UserId=@1";
+        email = Request["Email"];
+        db.Execute(query, email, id);
+        Response.Redirect(@Href("~/Member/ViewDatabase"));
+    }
+    else{
+        var query = "SELECT * FROM UserProfile WHERE UserId=@0";
+        var row = db.QuerySingle(query, id);
+        email = row.email;
+    }
+}
+<h1>@Request["email"]</h1>
+<h2>Edit Entry</h2>
+<form method="post" action="">
+    Id: @id <br>
+    Email: <input type="text" name="email" value=@email>
+    <input type="submit" value="Update">
+</form>
+<a href=@Href("~/Member/ViewDatabase")>View Database</a>
+<a href=@Href("~/Member/DeleteEntry", @id)>DeleteEntry</a>

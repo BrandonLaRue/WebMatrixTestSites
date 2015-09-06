@@ -1,0 +1,64 @@
+﻿@{
+  Layout="_SiteLayout.cshtml";
+  Page.title="Main Page";
+  }
+
+@{
+    var db = Database.Open("StarterSite");
+    var query = "SELECT * FROM userprofile ORDER BY userid";
+}
+<style type="text/css">
+    .remove-btn {
+        border-style: hidden;
+        border-radius: 10px;
+        background-color: #BFBFBF;
+    }
+    .remove-btn:hover {
+        background-color: #d2cbcb;
+    }
+</style>
+
+<div style="margin-left:5%;">
+    <div class="row">
+        <div class="col-md-6">
+            <table class="table table-striped table-hover">
+                <tr>
+                    <th>User Id</th>
+                    <th>Email</th>
+                    <th></th>
+                </tr>
+                @{
+                    foreach(var row in db.Query(query)){
+                        <tr>
+                            <td id="num">@row.userid</td>
+                            <td>@row.email</td>
+                            <td><button class="remove-btn">
+                                    X
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </table>
+         </div>
+    </div>
+    <form method="post">
+    Email: <input type="text" name="email">
+    <input type="submit" value="Add to DB">
+</form>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        $(".remove-btn").click(function () {
+            var id = $(this).parent().siblings("#num").html();
+            $(this).html(id);
+            
+        });
+    });
+</script>
+@{
+    if(IsPost){
+        db.Query("INSERT INTO userprofile (email)VALUES ('"+ Request["email"] + "')");
+    }
+}

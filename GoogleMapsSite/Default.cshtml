@@ -1,0 +1,250 @@
+﻿<!--
+    Current Problems:
+        Problems when removing marker nodes
+        No way to remove nodes except markers
+        Pathing problems when node which is normally under a marker is moved away from that marker
+-->
+
+
+@{
+    //Initialize database for saved marker retrieval
+    var db = Database.Open("GoogleMapsSite");
+    var locationQuery = "SELECT * FROM Location";
+}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <title>Maps Test</title>
+        <link href="~/favicon.bmp" rel="shortcut icon" type="image/x-icon" />
+        <style type="text/css">
+            html {height: 100%}    
+            body {height: 100%; margin: 0; padding: 0}
+            #map-canvas {height: 100%}
+        </style>
+        <script type="text/javascript"
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBHMPuHiujn_NyKP61t3CLHp6G3JDGZ-Xc&sensor=FALSE">
+        </script>
+        <script type="text/javascript">
+            var map;
+            var markers = [];
+            var path; 
+            var pathArray = [];
+
+            var storedEvent;
+
+            //Defines the center of where the map will appear initially
+            var center = {
+                lat: 26.220093, 
+                lng: -80.263625
+            };
+            
+            //Query's database for saved markers and adds them to the map
+            function loadMarkersFromDb(){
+                @{
+                    foreach(var r in db.Query(locationQuery)){
+                        @:addMarker({lat: @r.lat, lng: @r.lng});
+                    }   
+                }
+            };
+            
+            //Adds markers to map as well as adding event listener and initializing the re-drawing of the map
+            function addMarker(location){
+                marker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    draggable: true
+                });
+
+                //markers.position is marked with a type attribte, so they can be distinguished from nodes of the path that are
+                //created by the editable property of the path
+                marker.position.type = "marker";
+
+                //creates the event handler for re-drawing the path when the marker is moved
+                google.maps.event.addListener(marker, 'dragend', updatePathEditMarker);
+
+                //creates the event handler for deleting markers upon right clicking
+                google.maps.event.addListener(marker, 'mousedown', markerClick);
+
+                //stores marker for later editing and path drawing
+                markers.push(marker);
+                pathArray.push(marker.position);
+
+                //re-draws path between markers
+                editPath();
+            };
+
+            //distinguished left from right click for maker mouseDown event
+            function markerClick(event){
+                if(event.Va.which == 1){    //left Click event
+                    
+                }
+                if(event.Va.which == 3){    //right Click event
+                    deleteMarker(event.latLng);
+                }
+            }
+
+            var c;
+            //deletes marker
+            function deleteMarker(markerPosition){
+                //remove marker from path
+                console.log(pathArray.indexOf(markerPosition));
+                c = pathArray;
+                pathArray.splice(
+                    pathArray.indexOf(markerPosition), 1);
+                
+                editPath();
+
+                for(var i in markers){
+                    if(markers[i].position == markerPosition){
+                        console.log("here");
+                        markers[i].setMap(null);
+                        markers.splice(i, 1);
+                    }
+                }
+            }
+
+
+            //returns an array of all markers in the order added
+            function getPathFromMarkers(){
+                //temporary variables
+                var m;
+                var a = [];
+                
+                for(var i in markers){
+                    m = markers[i].getPosition();
+                    a.push(m);
+                }
+                return a;
+            };
+                 
+            //the marker loses its type tag as it is redefined by the drag event
+            //this caused problems when distinguishing markers from other nodes     
+            function fixMarkerTag(){
+                for(var i in markers){
+
+                    if(!markers[i].position.hasOwnProperty("type")){
+                        markers[i].position.type = "marker";
+                    }
+                }
+            }   
+
+            function updatePathEditMarker(event){
+
+                fixMarkerTag();
+
+                //markers holds the most up to date information on marker positions
+                //the path is not updated automatically when markers are changed   
+                var tempPathPos = path.getPath().j;  //holds old path positions(including side nodes)
+                var tempPathMarkerPos = [];   //holds positions of old markers from path
+                
+                var tempMarkers = [];   //holds new marker positions
+                
+
+                //create an array of the positions of the markers after the change
+                for(var i in markers){
+                    tempMarkers.push(markers[i].position);
+                }
+                
+
+                //create array of positions of markers before the change
+                for(var i in tempPathPos){
+                    if(tempPathPos[i].type == "marker"){
+                        tempPathMarkerPos.push(tempPathPos[i]);  
+                    }
+                }
+
+                //compare values of markers
+                for(var i in tempMarkers){      //both tempPath and tempMarkers have the same length
+                    if(tempPathMarkerPos[i] != tempMarkers[i]){
+                        //update the value of the changed marker in the tempPathPos
+                        //tempPathPos now reflects the change of the marker
+                        tempPathPos[tempPathPos.indexOf(tempPathMarkerPos[i])] = tempMarkers[i];
+                        pathArray = tempPathPos;
+                    }
+                }
+                editPath();
+            }
+
+            //creates the line path on the map between the markers and extra nodes
+            function editPath(){
+                //Negate the prior line drawing if there was one
+                if(!(path == null)){
+                    path.setMap(null);
+                }
+
+                //Draw lines on map based on path
+                path = new google.maps.Polyline({
+                    path: pathArray,
+                    strokeColor:"#0000FF",
+                    strokeOpacity:0.8,
+                    strokeWeight:2,
+                    map: map,
+                    editable: true,
+                    draggable: false
+                });
+
+                //event occours when new node is created by dividing old
+                google.maps.event.addListener(path.getPath(), "insert_at", updatePath);
+                
+
+                //event occours when existing node is moved
+                //google.maps.event.addListener(path.getPath(), "set_at", doThing);   
+            }
+
+            
+            function updatePath(event){
+                pathArray = path.getPath();
+            }
+
+            //[depreciated]creates the line path on the map between the markers and extra nodes
+            function makePath(){ 
+
+                //Negate the prior line drawing if there was one
+                if(!(path == null)){
+                    path.setMap(null);
+                }
+
+                //Draw lines on map based on markers
+                path = new google.maps.Polyline({
+                    path: getPathFromMarkers(),
+                    strokeColor:"#0000FF",
+                    strokeOpacity:0.8,
+                    strokeWeight:2,
+                    map: map,
+                    editable: true,
+                    draggable: false
+                });
+            };
+            
+            //Initialize map (called when page finishes loading)
+            function initialize() {
+
+                //set settings for map
+                var  mapOptions = {
+                    center: center,
+                    zoom: 15
+                };
+
+                //create actual map
+                map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+
+                //load markers from database and draw path between them
+                loadMarkersFromDb();
+
+                //sets the event listener for adding new markers to the map
+                google.maps.event.addListener(map, 'click', function(event) {
+                    addMarker(event.latLng);
+                });
+            };
+
+            //calls the initialize function for the map when the page loads
+            google.maps.event.addDomListener(window, 'load', initialize);
+        </script>
+    </head>
+    <body>
+        <!--This will hold the map-->
+        <div id="map-canvas"></div>
+    </body>
+</html>

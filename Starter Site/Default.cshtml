@@ -1,0 +1,13 @@
+﻿@{
+    Layout="_SiteLayout.cshtml";
+    Page.title="Main Page";
+
+    if(WebSecurity.IsAuthenticated){
+        <h2>Hello, @WebSecurity.CurrentUserName!</h2>
+        }
+}
+
+<a href=@Href("~/Member/ViewDatabase")>View Database</a> <br>
+<a href=@Href("~/Register")>Register</a> <br>
+<a href=@Href("~/Login")>Login</a> <br>
+<a href=@Href("~/Logout")>Logout</a> <br>

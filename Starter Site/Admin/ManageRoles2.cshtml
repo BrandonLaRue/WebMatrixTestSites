@@ -1,0 +1,95 @@
+﻿@{
+    Layout = "~/_SiteLayout.cshtml";    
+    Page.title = "Manage Roles";
+
+    var db = Database.Open("StarterSite");
+    var userSelectQuery = "SELECT Username FROM UserProfile3";
+
+    var role = "";
+    var user = "";
+    var errorText = "";
+
+    if(IsPost){
+        if(!Request["addRole"].IsEmpty() && !Request["role"].IsEmpty()){
+            role = Request["role"];
+            if(Roles.RoleExists(role)){
+                errorText = "The role you attempted to add already exists.";
+            }
+            else{
+                Roles.CreateRole(role);
+            }
+        }
+        if(!Request["deleteRole"].IsEmpty() && !Request["role"].IsEmpty()){
+            role = Request["role"];
+            if(Roles.RoleExists(role)){
+                Roles.DeleteRole(role);
+            }
+            else{
+                errorText = "The ro le you are atempting to delete does not exist.";
+            }
+        }
+        <h1>Test: @Request["userSelect"] @Request["roleSelect"] @Request["addUserToRole"]</h1>
+        if(!Request["addUserToRole"].IsEmpty() && !Request["userSelect"].IsEmpty() && !Request["roleSelect"].IsEmpty()){
+            <h1>Made it!</h1>
+            user = Request["userSelect"];
+            role = Request["roleSelect"];
+            
+            if(Roles.IsUserInRole(user,role)){
+                errorText = "The user you are attempting to add to the role,  \"" + role + ",\" is already a member.";
+            }
+            else{
+                Roles.AddUserToRole(user,role);
+            }
+        }   
+        if(!Request["deleteUserFromRole"].IsEmpty() && !Request["userSelect"].IsEmpty() && !Request["roleSelect"].IsEmpty()){
+            user = Request["userSelect"];
+            role = Request["roleSelect"];
+
+            if(Roles.IsUserInRole(user, role)){
+                Roles.RemoveUserFromRole(user, role);
+            }
+            else{
+                errorText = "This user does not have the role of \"" + role + ".\"";
+            }
+        }
+    }
+
+}
+
+@if(!(errorText == "")){
+    <h2 class="alert">@errorText</h2>
+}
+
+
+<form method="post" class="form-condensed">
+    <label>Role: </label><input type="text" name="role" style="border-radius: 15px; border: 1px solid black">
+    <input type="submit" name="addRole" value="Add Role" class="btn btn-primary">
+    <input type="submit" name="deleteRole" value="Delete Role" class="btn btn-primary"> <br>
+
+    <select name="userSelect" style="border-radius: 15px;">
+        @foreach(var u in db.Query(userSelectQuery)){
+            <option>@u.Username</option>
+        }
+    </select>
+    <select name="roleSelect" style="border-radius: 15px;">
+        @foreach(var r in Roles.GetAllRoles()){
+           <option>@r</option>
+        }
+    </select>
+
+    <input type="submit" name="addUserToRole" value="Add User to Role" class="btn btn-primary">
+    <input type="submit" name="deleteUserFromRole" value="Delete User from Role" class="btn btn-primary">
+</form>
+
+<ul>
+    @foreach(var r in Roles.GetAllRoles()){
+        <li>@r</li>
+        <ul>
+            @foreach(var u in Roles.GetUsersInRole(r)){
+                <li>@u</li>
+            }
+        </ul>
+    }
+</ul>
+    
+

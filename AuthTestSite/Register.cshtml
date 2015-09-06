@@ -1,0 +1,59 @@
+﻿
+@{
+    Layout = "~/_SiteLayout.cshtml";
+    Page.title = "Register";
+
+    //Initialization
+    var email = "";
+    var password = "";
+    var confpass = "";
+    var errorText = "";
+
+    //Validate User Submitted Data
+    Validation.RequireField("email", "You must enter an email address.");
+    Validation.RequireField("password", "You must enter a password.");
+    Validation.Add("confPass",
+        Validator.EqualsTo("password", "Your password and confirmation don't match.")
+    );
+    Validation.Add("password",
+        Validator.StringLength(
+            maxLength: Int32.MaxValue,
+            minLength: 6,
+            errorMessage: "Your password must be at least 6 characters."
+        )
+    );
+
+    //If post data is recieved, proceed to registration
+    if(IsPost){
+        email = Request["email"];
+        password = Request["password"];
+
+        //If data is valid, proceed to registration
+        if(Validation.IsValid()){
+            if(WebSecurity.UserExists(email)){
+                errorText = "This user already exists.";
+            }
+            else{
+                WebSecurity.CreateUserAndAccount(email, password);
+                WebSecurity.Login(email,password,true);   
+                Response.Redirect("~/Home");
+            }
+        }
+    }
+}
+
+<h1>Register</h1>
+<p>@errorText</p>
+<form method="post">
+    @Html.ValidationMessage("email")
+    @Html.ValidationMessage("password")
+    @Html.ValidationMessage("confpass")
+    <br>
+    <label>Email: </label> <input type="text" name="email"><br>
+    <label>Password: </label> <input type="password" name="password"><br>
+    <label>Confirm Password: </label> <input type="password" name="confPass"><br>
+    <input type="submit" value="Submit">
+</form>
+<br>
+
+<a href=@Href("~/Home")>Return Home</a>

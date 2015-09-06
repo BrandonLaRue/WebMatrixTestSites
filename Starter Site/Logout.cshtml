@@ -1,0 +1,6 @@
+﻿@{
+    if(WebSecurity.IsAuthenticated){
+        WebSecurity.Logout();
+        Response.Redirect("~/");
+    }
+}

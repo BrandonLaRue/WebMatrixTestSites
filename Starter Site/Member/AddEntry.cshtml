@@ -1,0 +1,23 @@
+﻿@{
+    Layout="~/_SiteLayout.cshtml";
+    Page.title="Add Entry";
+
+    Validation.RequireField("Email", "You need to enter an email address.");
+
+    var email = "";
+
+    var db = Database.Open("StarterSite");
+
+    if(IsPost && Validation.IsValid()){
+        var query = "INSERT INTO UserProfile (email)  VALUES (@0)";
+        email = Request["email"];
+        db.Execute(query, email);
+        Response.Redirect(@Href("~/Member/ViewDatabase"));
+    }
+}
+<h1>@Request["email"]</h1>
+<h2>Edit Entry</h2>
+<form method="post">
+    Email: <input type="text" name="email" value=@email>
+    <input type="submit" value="Update">
+</form>
